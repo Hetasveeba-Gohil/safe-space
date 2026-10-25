@@ -3,20 +3,19 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#3b1d63">
 <title>Safe Space - help for online abuse</title>
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
 <a class="exit" href="https://www.google.com" onclick="location.replace('https://www.google.com');return false;">Quick exit</a>
-<header>
-  <h1 id="title">Safe Space</h1>
-  <p class="sub">Free help for online threats, leaked photos, fake profiles and stalking. Nothing you enter leaves this device.</p>
-  <nav>
-    <a href="#home">Home</a><a href="#vault">Evidence vault</a><a href="#complaint">Complaint</a><a href="#device">Device check</a><a href="#help">Helplines</a>
-  </nav>
-</header>
+<div class="hero"><div class="in">
+  <h1>Safe Space</h1>
+  <p>Step-by-step help for online threats, leaked photos, fake profiles and stalking. No login. Nothing leaves your phone.</p>
+  <nav><a href="#home">Home</a><a href="#vault">Evidence vault</a><a href="#complaint">Complaint</a><a href="#device">Device check</a><a href="#help">Helplines</a></nav>
+</div></div>
 <main id="app" tabindex="-1"></main>
-<footer>General information, not legal advice. In danger now? Call 112.</footer>
+<footer>General information, not legal advice. In danger now? Call 112.<br><button id="wipe">Delete all my data from this device</button></footer>
 <script src="app.js"></script>
 </body>
 </html>

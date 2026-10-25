@@ -6,7 +6,7 @@ const esc = t => String(t).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':
 // ---------- CONTENT (edit here; have an NGO or lawyer review it) ----------
 const FLOWS = {
   threat: {
-    title: 'Someone is threatening me',
+    icon: '🛑', title: 'Someone is threatening me',
     sub: 'Sextortion, blackmail, or threats to leak photos',
     now: ['You are not at fault. This is a crime, and many people have been through it.',
           'Do NOT pay or send more photos. Payment usually leads to more demands.',
@@ -20,7 +20,7 @@ const FLOWS = {
              'If photos exist, start a StopNCII.org case so they can be blocked from spreading.']
   },
   fake: {
-    title: 'Fake profile or morphed photo',
+    icon: '🎭', title: 'Fake profile or morphed photo',
     sub: 'Someone is pretending to be me or editing my photos',
     now: ['Do not reply to the account or confront the person.',
           'Ask a friend to also report the profile, since more reports can speed up removal.'],
@@ -32,7 +32,7 @@ const FLOWS = {
              'Tell people you trust so they do not fall for the fake account.']
   },
   leak: {
-    title: 'My private photos were leaked',
+    icon: '🔒', title: 'My private photos were leaked',
     sub: 'Intimate images shared or posted without consent',
     now: ['Sharing intimate images without consent is a crime. The blame is on the person who shared them.',
           'Breathe. Take the next steps one at a time.'],
@@ -44,7 +44,7 @@ const FLOWS = {
              'Talk to a trusted person or call 181 for support.']
   },
   stalk: {
-    title: 'Someone is stalking or tracking me',
+    icon: '👁️', title: 'Someone is stalking or tracking me',
     sub: 'Unwanted contact, spying, location or device tracking',
     now: ['If you are in immediate danger, call 112.',
           'Do not tell the person you suspect them, since that can make things worse.',
@@ -78,21 +78,38 @@ const DEVICE = [
 // ---------- VIEWS ----------
 const list = a => '<ul>' + a.map(x => `<li>${esc(x)}</li>`).join('') + '</ul>';
 
+const SK = 'safe_space_steps';
+const steps = () => { try { return JSON.parse(localStorage.getItem(SK)) || {}; } catch { return {}; } };
+
 function home() {
-  app.innerHTML = `<h2>What is happening?</h2><div class="grid">` +
-    Object.entries(FLOWS).map(([k, f]) => `<a class="big" href="#flow-${k}"><b>${esc(f.title)}</b><span>${esc(f.sub)}</span></a>`).join('') +
+  app.innerHTML = `<div class="reassure"><b>You are not alone, and this is not your fault.</b> Pick what is happening. We will take it one step at a time.</div><h2>What is happening?</h2><div class="grid">` +
+    Object.entries(FLOWS).map(([k, f]) => `<a class="big" href="#flow-${k}"><span class="ic" aria-hidden="true">${f.icon}</span><span><b>${esc(f.title)}</b><span class="t">${esc(f.sub)}</span></span></a>`).join('') +
     `</div><div class="panel"><h3>Tools</h3><p>Save proof safely, write your complaint, and check your phone for spying.</p>
-    <a href="#vault">Evidence vault</a> · <a href="#complaint">Complaint writer</a> · <a href="#device">Device check</a> · <a href="#help">Helplines</a></div>`;
+    <a class="btn" href="#vault">Evidence vault</a><a class="btn alt" href="#complaint">Complaint writer</a><a class="btn alt" href="#device">Device check</a></div>`;
 }
 
 function flow(k) {
   const f = FLOWS[k]; if (!f) return home();
-  app.innerHTML = `<h2>${esc(f.title)}</h2>
-  <div class="panel warn"><h3>Right now</h3>${list(f.now)}</div>
-  <div class="panel"><h3>Save proof first (before blocking or deleting)</h3>${list(f.save)}
-    <a class="btn" style="text-decoration:none;display:inline-block;border-radius:8px;padding:11px 16px;background:var(--accent);color:var(--bg);font-weight:700" href="#vault">Open evidence vault</a></div>
-  <div class="panel"><h3>Where to report</h3>${list(f.report)}
-    <a href="#complaint">Write my complaint</a> · <a href="#help">Helplines</a></div>`;
+  const st = steps();
+  const sec = (id, title, arr, cls) => `<div class="panel ${cls || ''}"><h3>${title}</h3>` + arr.map((t, i) => {
+    const key = `${k}:${id}:${i}`;
+    return `<label class="chk"><input type="checkbox" data-k="${key}" ${st[key] ? 'checked' : ''}><span>${esc(t)}</span></label>`;
+  }).join('') + '</div>';
+  app.innerHTML = `<h2>${f.icon} ${esc(f.title)}</h2>
+  <div class="panel"><b id="prog"></b><div class="bar"><i id="barfill"></i></div><small class="sub">Tick each step when done. Your progress stays on this device only.</small></div>
+  ${sec('now', 'Right now', f.now, 'warn')}
+  ${sec('save', 'Save proof first (before blocking or deleting)', f.save)}
+  <a class="btn" href="#vault" style="margin-top:0">Open evidence vault</a>
+  ${sec('report', 'Where to report', f.report)}
+  <a class="btn" href="#complaint">Write my complaint</a><a class="btn alt" href="#help">Helplines</a>`;
+  const boxes = [...document.querySelectorAll('.chk input')];
+  const upd = () => {
+    const d = boxes.filter(x => x.checked).length;
+    $('#prog').textContent = `${d} of ${boxes.length} steps done`;
+    $('#barfill').style.width = (100 * d / boxes.length) + '%';
+  };
+  boxes.forEach(x => x.onchange = () => { const s2 = steps(); s2[x.dataset.k] = x.checked; localStorage.setItem(SK, JSON.stringify(s2)); upd(); });
+  upd();
 }
 
 // ---------- EVIDENCE VAULT (SHA-256 fingerprint + timestamp, stored on this device) ----------
@@ -169,9 +186,16 @@ function device() {
 }
 
 function help() {
-  app.innerHTML = `<h2>Helplines and official sites</h2>` + HELP.map(h => `<a class="big" href="${h[2]}" style="margin-bottom:10px"><b>${esc(h[0])}</b><span>${esc(h[1])}</span></a>`).join('') +
+  app.innerHTML = `<h2>Helplines and official sites</h2>` + HELP.map(h => `<a class="big" href="${h[2]}" style="margin-bottom:10px"><span><b>${esc(h[0])}</b><span class="t">${esc(h[1])}</span></span></a>`).join('') +
     `<p class="sub">Numbers and sites can change. Confirm them on the official portals.</p>`;
 }
+
+// ---------- WIPE ----------
+$('#wipe').onclick = () => {
+  if (confirm('Delete everything saved by this app on this device (vault, steps, checklist)?')) {
+    localStorage.removeItem(KEY); localStorage.removeItem(SK); sessionStorage.clear(); alert('All data deleted.'); location.hash = 'home'; route();
+  }
+};
 
 // ---------- ROUTER ----------
 function route() {
